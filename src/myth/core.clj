@@ -51,13 +51,10 @@
 
 (def syllable
   #{"a" "ab" "zu" "an" "nam" "nan" "nin" "ki" "tia" "resh" "du" "mu" "shti" "na" "nna" "gil" "ga" "gu" "ish" "shu"
-    "ru" "tum" "bu" "ne"})
+    "ru" "tum" "bu" "ne" "pa"})
 
 (def ending-syllable
   #{"shar" "mat" "shur" "gan" "gal" "mesh" "kur" "bur"})
-
-(def god-name
-  [:part syllable syllable [:opt [:opt "'"] ending-syllable]])
 
 (def quality
   #{"stubbing your toe on the corner of the bed and shouting \"ow!\""
@@ -98,6 +95,9 @@
     "night strolls"
     "erotic poetry of questionable quality"
     "animals that from a long way off look like flies"})
+
+(def god-name
+  [:part syllable syllable [:opt syllable] [:opt [:opt "'"] ending-syllable]])
 
 (defmulti render (fn [x]
                    (cond (set? x) :pick
