@@ -128,3 +128,8 @@
 
 (def god
   [:part make-god ", the" [:opt adjective] #{"god" "godess"} "of" quality])
+
+
+;;; usage:
+
+;; (render god)
