@@ -77,6 +77,11 @@
     "corners"
     "zippers"
     "hammers"
+    [:part "individually packaged" #{"tea bags"
+                                     "biscuits"
+                                     "wet wipes"
+                                     "donuts"
+                                     "pickles"}]
     [:part "haberdashery" [:opt #{"(excluding wigs)"
                                   "(excluding needles)"
                                   "(excluding thread)"
@@ -88,16 +93,22 @@
     "ointment"
     "skin boils"
     [:part #{"foot" "nose" "ear" "witch"} "doctors"]
-    "silent farts"
-    [:part #{"yellow" "green" "white"} "snot"]
+    [:part #{"silent" "runny"} "farts"]
+    [:part #{nil "yellow" "green" "white" "black"} #{"snot" "bile" "phlegm" "blood"}]
     "bottle caps"
     "short hens"
     "night strolls"
     "erotic poetry of questionable quality"
-    "animals that from a long way off look like flies"})
+    "animals that from a long way off look like flies"
+    [:part "unspent" #{"dimes" "change"}]})
 
 (def god-name
   [:part syllable syllable [:opt syllable] [:opt [:opt "'"] ending-syllable]])
+
+(def god
+  [:part [:capitalize [:collapse god-name]] ", the" [:opt adjective] #{"god" "godess"} "of" quality])
+
+;; engine
 
 (defmulti render (fn [x]
                    (cond (set? x) :pick
@@ -106,14 +117,17 @@
                          (nil? x) nil
                          :else :default)))
 
-(defn make-god []
-  (str/capitalize (str/replace (render god-name) " " "")))
-
 (defmethod render :default [x] x)
 
 (defmethod render nil [_] nil)
 
 (defmethod render :function [fun] (fun))
+
+(defmethod render :capitalize [x]
+  (str/capitalize (render (concat [:part] (rest x)))))
+
+(defmethod render :collapse [x]
+  (str/replace (render (concat [:part] (rest x))) " " ""))
 
 (defn s-trim [s] (when s (str/trim s)))
 
@@ -125,9 +139,6 @@
 (defmethod render :pick [x] (render (rand-nth (seq x))))
 
 (defmethod render :opt [x] (render #{nil (concat [:part] (rest x))}))
-
-(def god
-  [:part make-god ", the" [:opt adjective] #{"god" "godess"} "of" quality])
 
 
 ;;; usage:
