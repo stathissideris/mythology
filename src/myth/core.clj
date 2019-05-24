@@ -36,25 +36,25 @@
                   (concat [%] (when w (wn/get-synonym-lemmas w)))) s)))
 
 (def adjective
-  (enrich
-   :adjective
-   #{"ancient"
-     "benevolent"
-     "vengeful"
-     "vindictive"
-     "forgiving"
-     "all-seeing"
-     "all-loving"
-     "lame"
-     "fear-inspiring"
-     "sleeping"
-     "forgotten"
-     "obscure"
-     "secret"
-     "mysterious"
-     "glorious"
-     "brave"
-     "non-corporeal"}))
+  (->> #{"ancient"
+         "benevolent"
+         "vengeful"
+         "vindictive"
+         "forgiving"
+         "all-seeing"
+         "all-loving"
+         "lame"
+         "fear-inspiring"
+         "sleeping"
+         "forgotten"
+         "obscure"
+         "secret"
+         "mysterious"
+         "glorious"
+         "brave"
+         "non-corporeal"}
+       (enrich :adjective)
+       (enrich :adjective)))
 
 ;; inspiration from https://en.wikipedia.org/wiki/List_of_Mesopotamian_deities
 
