@@ -1,5 +1,6 @@
 (ns myth.core
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [myth.wordnet :as wn]))
 
 ;;http://wiki.c2.com/?TheOrderOfThings
 
@@ -30,22 +31,30 @@
     "silver"
     "violet"})
 
+(defn enrich [pos s]
+  (set (mapcat #(let [w (try (wn/get-word wn/dict pos %) (catch Exception _ nil))]
+                  (concat [%] (when w (wn/get-synonym-lemmas w)))) s)))
+
 (def adjective
-  #{"ancient"
-    "benevolent"
-    "vengeful"
-    "all-seeing"
-    "all-loving"
-    "lame"
-    "fear-inspiring"
-    "sleeping"
-    "forgotten"
-    "obscure"
-    "secret"
-    "mysterious"
-    "glorious"
-    "brave"
-    "non-corporeal"})
+  (enrich
+   :adjective
+   #{"ancient"
+     "benevolent"
+     "vengeful"
+     "vindictive"
+     "forgiving"
+     "all-seeing"
+     "all-loving"
+     "lame"
+     "fear-inspiring"
+     "sleeping"
+     "forgotten"
+     "obscure"
+     "secret"
+     "mysterious"
+     "glorious"
+     "brave"
+     "non-corporeal"}))
 
 ;; inspiration from https://en.wikipedia.org/wiki/List_of_Mesopotamian_deities
 
@@ -106,7 +115,7 @@
   [:part syllable syllable [:opt syllable] [:opt [:opt "'"] ending-syllable]])
 
 (def god
-  [:part [:capitalize [:collapse god-name]] ", the" [:opt adjective] #{"god" "godess"} "of" quality])
+  [:part [:capitalize [:collapse god-name]] ", the" adjective #{"god" "goddess"} "of" quality])
 
 ;; engine
 
