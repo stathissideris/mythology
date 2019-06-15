@@ -191,8 +191,8 @@
   [w]
   (let [pos (:pos w)]
     (cond
-      (pos :adverb)    (assoc w :word (synonymize-word (:word w) :adverb))
-      (pos :adjective) (assoc w :word (synonymize-word (:word w) :adjective))
+      (pos :adverb)    (assoc w :text (synonymize-word (:text w) :adverb))
+      (pos :adjective) (assoc w :text (synonymize-word (:text w) :adjective))
       :else            w)))
 
 ;;(synonymize (st/tag "The angry tide rose rapidly." {}))
@@ -209,4 +209,4 @@
 
 (defmethod flatten :word
   [w]
-  (:word w))
+  (:text w))
