@@ -87,11 +87,12 @@
      :sentences (map #(tag % opts) (.sentences this))})
 
   Sentence
-  (tag [this {:keys [pos lemma]}]
+  (tag [this {:keys [pos lemma ner]}]
     (let [words (map (fn [w] {:type :word :word w}) (.words this))]
       {:type :sentence
        :words (cond-> words
-                pos   (#(map merge %
-                             (map (fn [x] (update x :pos friendly-tags))
-                                  (tags this :pos (memfn posTags)))))
-                lemma (#(map merge % (tags this :lemma (memfn lemmas)))))})))
+                pos   (#(->> (map merge % (tags this :pos (memfn posTags)))
+                             (map (fn [x] (update x :pos friendly-tags)))))
+                lemma (#(map merge % (tags this :lemma (memfn lemmas))))
+                ner   (#(->> (map merge % (tags this :ner (memfn nerTags)))
+                             (map (fn [x] (if (= "O" (:ner x)) (dissoc x :ner) x))))))})))
