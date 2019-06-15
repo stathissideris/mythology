@@ -2,7 +2,8 @@
   (:require [clojure.string :as str]
             [myth.wordnet :as wn]
             [myth.stanford-nlp :as st]
-            [myth.simple-nlg :as simple])
+            [myth.simple-nlg :as simple]
+            [myth.util :as util])
   (:refer-clojure :exclude [flatten])
   (:import [edu.stanford.nlp.simple Document Sentence]))
 
@@ -176,17 +177,26 @@
     (catch Exception _ s)))
 
 (defmethod synonymize :word
-  [{:keys                                  [text pos lemma]
-    {:keys [adverb adjective proper noun]} :pos
-    :as                                    w}]
+  [{:keys                     [text pos lemma]
+
+    {:keys [noun verb adverb adjective
+            proper past-tense gerund
+            past-participle]} :pos
+
+    :as                       w}]
   (when-not (and pos lemma)
     (throw (ex-info "Can't synonymize word without :pos and :lemma tags" w)))
-  (cond
-    adverb                  (assoc w :text (synonymize-word text :adverb))
-    adjective               (assoc w :text (synonymize-word text :adjective))
-    (and noun (not proper)) (assoc w :text (cond-> (synonymize-word lemma :noun)
-                                             (st/plural? w) simple/plural))
-    :else                   w))
+  (let [new-text (cond
+                   adverb                  (synonymize-word text :adverb)
+                   adjective               (synonymize-word text :adjective)
+                   (and noun (not proper)) (cond-> (synonymize-word lemma :noun)
+                                             (st/plural? w) simple/plural)
+                   verb                    (cond-> (synonymize-word lemma :verb)
+                                             past-tense simple/past
+                                             gerund simple/gerund
+                                             past-participle identity) ;;TODO
+                   :else                   text)]
+    (assoc w :text (util/format-like new-text text))))
 
 
 
@@ -204,7 +214,14 @@
   [w]
   (:text w))
 
-;;(flatten (synonymize (st/tag "The angry tides rose rapidly." {:pos true :lemma true})))
-
-;; > (flatten (synonymize (st/tag "Senior cabinet ministers were reported to have hatched plans to force other candidates to withdraw from the race after Johnson comfortably topped the poll in the first ballot of MPs this week." {:pos true :lemma true})))
-;; "fourth-year locker government ministers were reported to have hatched designs to force former candidates to withdraw from the race after Johnson comfortably topped the public opinion poll in the beginning vote of military policemans this hebdomad ."
+;; (-> "The angry tides rose rapidly."
+;;     (st/tag {:pos true :lemma true})
+;;     synonymize
+;;     flatten)
+;;
+;; (-> "Senior cabinet ministers were reported to have hatched plans to
+;;     force other candidates to withdraw from the race after Johnson
+;;     comfortably topped the poll in the first ballot of MPs this week."
+;;     (st/tag {:pos true :lemma true})
+;;     synonymize
+;;     flatten)

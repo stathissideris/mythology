@@ -48,7 +48,7 @@
    "UH"     #{:interjection}
    "VB"     #{:verb :base-form}
    "VBD"    #{:verb :past-tense}
-   "VBG"    #{:verb :gerund-or-present-participle}
+   "VBG"    #{:verb :gerund :gerund-or-present-participle}
    "VBN"    #{:verb :past-participle}
    "VBP"    #{:verb :non-3rd-person-singular-present}
    "VP"     #{:verb :phrase}
