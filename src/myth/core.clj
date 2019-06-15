@@ -1,6 +1,8 @@
 (ns myth.core
   (:require [clojure.string :as str]
-            [myth.wordnet :as wn]))
+            [myth.wordnet :as wn]
+            [myth.stanford-nlp :as st])
+  (:import [edu.stanford.nlp.simple Document Sentence]))
 
 ;;http://wiki.c2.com/?TheOrderOfThings
 
@@ -115,7 +117,7 @@
   [:part syllable syllable [:opt syllable] [:opt [:opt "'"] ending-syllable]])
 
 (def god
-  [:part [:capitalize [:collapse god-name]] ", the" adjective #{"god" "goddess"} "of" quality])
+  [:part [:capitalize [:collapse god-name]] ", the" adjective #{"god" "goddess" "diety"} "of" quality])
 
 ;; engine
 
@@ -153,3 +155,29 @@
 ;;; usage:
 
 ;; (render god)
+
+(def dd
+  (st/document
+   "Total orders mainly in CL and mainly from Natural Search rose
+   by 739% to 1.4K, and surpassed the expected interval.
+
+   The increase was evident for users mostly for audio,
+   tv-home-cinema and cameras product categories, from PC, Mobile and
+   Tablet devices. The trend was spread across pages.
+
+   This was recorded in parallel with an expected variation in page
+   views, entries, review clicks, revenue and exit rate in the
+   overall site."))
+
+(-> dd st/sentences first st/tag-pos)
+
+(defn synonymize-word [s]
+  (try
+    (rand-nth (drop 1 (wn/get-synonym-lemmas (wn/get-word wn/dict :verb s))))
+    (catch Exception _ s)))
+
+(defn synonymize-text [s]
+  (->> s
+       split-words
+       (map synonymize-word)
+       (str/join " ")))

@@ -36,6 +36,7 @@
 
 ;; holonym: A term that denotes a whole whose part is denoted by
 ;; another term, such as 'face' in relation to 'eye'.
+;;
 ;; (-> (noun d "eye") senses first PointerUtils/getHolonyms seq) ;; visual system, face
 ;;
 ;; (-> (adjective d "ancient") senses first PointerUtils/getSynonyms seq)
