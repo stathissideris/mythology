@@ -172,6 +172,8 @@
 
 (-> dd st/sentences first st/tag-pos)
 
+
+
 (defmulti synonymize :type)
 
 (defmethod synonymize :document
@@ -184,18 +186,23 @@
 
 (defn synonymize-word [s pos]
   (try
-    (rand-nth (drop 1 (wn/get-synonym-lemmas (wn/get-word wn/dict pos s))))
+    (rand-nth (wn/get-synonym-lemmas (wn/get-word wn/dict pos s)))
     (catch Exception _ s)))
 
 (defmethod synonymize :word
   [w]
   (let [pos (:pos w)]
+    (when-not pos
+      (throw (ex-info "Can't synonymize word without :pos tags" w)))
     (cond
-      (pos :adverb)    (assoc w :text (synonymize-word (:text w) :adverb))
-      (pos :adjective) (assoc w :text (synonymize-word (:text w) :adjective))
-      :else            w)))
+      (pos :adverb)     (assoc w :text (synonymize-word (:text w) :adverb))
+      (pos :adjective)  (assoc w :text (synonymize-word (:text w) :adjective))
+      ;;(st/plural? w)      (assoc w :text )
+      (and (not (st/plural? w))
+           (:noun pos)) (assoc w :text (synonymize-word (:text w) :noun))
+      :else             w)))
 
-;;(synonymize (st/tag "The angry tide rose rapidly." {}))
+
 
 (defmulti flatten :type)
 
@@ -210,3 +217,5 @@
 (defmethod flatten :word
   [w]
   (:text w))
+
+;;(flatten (synonymize (st/tag "The angry tide rose rapidly." {:pos true})))

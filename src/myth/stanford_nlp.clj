@@ -24,7 +24,7 @@
    "LS"     #{:list-item-marker}
    "MD"     #{:modal}
    "NN"     #{:noun :singular-or-mass}
-   "NNS"    #{:noun-plural}
+   "NNS"    #{:noun :plural}
    "NP"     #{:noun :proper :singular}
    "NNP"    #{:noun :proper :singular} ; Renamed in Penn POS
    "NPS"    #{:noun :proper :plural}
@@ -59,6 +59,9 @@
    "WRB"    #{:wh-adverb}
    ","      #{:comma}
    "."      #{:full-stop}})
+
+(defn plural? [{{:keys [plural proper noun]} :pos}]
+  (and plural noun (not proper)))
 
 (defn tag-pos [sentence]
   (map vector
