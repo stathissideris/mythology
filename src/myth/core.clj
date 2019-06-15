@@ -1,7 +1,8 @@
 (ns myth.core
   (:require [clojure.string :as str]
             [myth.wordnet :as wn]
-            [myth.stanford-nlp :as st])
+            [myth.stanford-nlp :as st]
+            [myth.simple-nlg :as simple])
   (:refer-clojure :exclude [flatten])
   (:import [edu.stanford.nlp.simple Document Sentence]))
 
@@ -157,22 +158,7 @@
 
 ;; (render god)
 
-(def dd
-  (st/document
-   "Total orders mainly in CL and mainly from Natural Search rose
-   by 739% to 1.4K, and surpassed the expected interval.
-
-   The increase was evident for users mostly for audio,
-   tv-home-cinema and cameras product categories, from PC, Mobile and
-   Tablet devices. The trend was spread across pages.
-
-   This was recorded in parallel with an expected variation in page
-   views, entries, review clicks, revenue and exit rate in the
-   overall site."))
-
-(-> dd st/sentences first st/tag-pos)
-
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmulti synonymize :type)
 
@@ -190,17 +176,17 @@
     (catch Exception _ s)))
 
 (defmethod synonymize :word
-  [w]
-  (let [pos (:pos w)]
-    (when-not pos
-      (throw (ex-info "Can't synonymize word without :pos tags" w)))
-    (cond
-      (pos :adverb)     (assoc w :text (synonymize-word (:text w) :adverb))
-      (pos :adjective)  (assoc w :text (synonymize-word (:text w) :adjective))
-      ;;(st/plural? w)      (assoc w :text )
-      (and (not (st/plural? w))
-           (:noun pos)) (assoc w :text (synonymize-word (:text w) :noun))
-      :else             w)))
+  [{:keys                                  [text pos lemma]
+    {:keys [adverb adjective proper noun]} :pos
+    :as                                    w}]
+  (when-not (and pos lemma)
+    (throw (ex-info "Can't synonymize word without :pos and :lemma tags" w)))
+  (cond
+    adverb                  (assoc w :text (synonymize-word text :adverb))
+    adjective               (assoc w :text (synonymize-word text :adjective))
+    (and noun (not proper)) (assoc w :text (cond-> (synonymize-word lemma :noun)
+                                             (st/plural? w) simple/plural))
+    :else                   w))
 
 
 
@@ -218,4 +204,7 @@
   [w]
   (:text w))
 
-;;(flatten (synonymize (st/tag "The angry tide rose rapidly." {:pos true})))
+;;(flatten (synonymize (st/tag "The angry tides rose rapidly." {:pos true :lemma true})))
+
+;; > (flatten (synonymize (st/tag "Senior cabinet ministers were reported to have hatched plans to force other candidates to withdraw from the race after Johnson comfortably topped the poll in the first ballot of MPs this week." {:pos true :lemma true})))
+;; "fourth-year locker government ministers were reported to have hatched designs to force former candidates to withdraw from the race after Johnson comfortably topped the public opinion poll in the beginning vote of military policemans this hebdomad ."
