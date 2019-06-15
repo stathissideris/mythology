@@ -31,11 +31,11 @@
    "NNPS"   #{:noun :proper :plural} ; Renamed
    "PDT"    #{:predeterminer}
    "POS"    #{:possessive-ending}
-   "PP"     #{:pronoun :personal-pronoun}
-   "PRP"    #{:pronoun :personal-pronoun} ; renamed
-   "PP$"    #{:pronoun :possessive-pronoun}
-   "PRP$"   #{:pronoun :possessive-pronoun} ; renamed
-   "RB"     #{::adverb}
+   "PP"     #{:pronoun :personal}
+   "PRP"    #{:pronoun :personal} ; renamed
+   "PP$"    #{:pronoun :possessive}
+   "PRP$"   #{:pronoun :possessive} ; renamed
+   "RB"     #{:adverb}
    "RBR"    #{:adverb :adverb-comparative}
    "RBS"    #{:adverb :adverb-superlative}
    "ROOT"   #{:root}
@@ -73,6 +73,9 @@
 (defprotocol StanfordNLPEntity
   (tag [this opts]))
 
+(defn- tags [sentence kw fun]
+  (map (fn [t] {kw t}) (fun sentence)))
+
 (extend-protocol StanfordNLPEntity
   String
   (tag [this opts]
@@ -80,15 +83,15 @@
 
   Document
   (tag [this opts]
-    {:type      ::document
+    {:type      :document
      :sentences (map #(tag % opts) (.sentences this))})
 
   Sentence
-  (tag [this opts]
-    {:type ::sentence
-     :words (map (fn [w t]
-                   {:type ::word
-                    :word w
-                    :pos  (friendly-tags t)})
-                 (.words this)
-                 (.posTags this))}))
+  (tag [this {:keys [pos lemma]}]
+    (let [words (map (fn [w] {:type :word :word w}) (.words this))]
+      {:type :sentence
+       :words (cond-> words
+                pos   (#(map merge %
+                             (map (fn [x] (update x :pos friendly-tags))
+                                  (tags this :pos (memfn posTags)))))
+                lemma (#(map merge % (tags this :lemma (memfn lemmas)))))})))

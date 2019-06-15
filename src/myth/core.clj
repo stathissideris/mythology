@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [myth.wordnet :as wn]
             [myth.stanford-nlp :as st])
+  (:refer-clojure :exclude [flatten])
   (:import [edu.stanford.nlp.simple Document Sentence]))
 
 ;;http://wiki.c2.com/?TheOrderOfThings
@@ -171,13 +172,41 @@
 
 (-> dd st/sentences first st/tag-pos)
 
-(defn synonymize-word [s]
+(defmulti synonymize :type)
+
+(defmethod synonymize :document
+  [d]
+  (update d :sentences (partial map synonymize)))
+
+(defmethod synonymize :sentence
+  [s]
+  (update s :words (partial map synonymize)))
+
+(defn synonymize-word [s pos]
   (try
-    (rand-nth (drop 1 (wn/get-synonym-lemmas (wn/get-word wn/dict :verb s))))
+    (rand-nth (drop 1 (wn/get-synonym-lemmas (wn/get-word wn/dict pos s))))
     (catch Exception _ s)))
 
-(defn synonymize-text [s]
-  (->> s
-       split-words
-       (map synonymize-word)
-       (str/join " ")))
+(defmethod synonymize :word
+  [w]
+  (let [pos (:pos w)]
+    (cond
+      (pos :adverb)    (assoc w :word (synonymize-word (:word w) :adverb))
+      (pos :adjective) (assoc w :word (synonymize-word (:word w) :adjective))
+      :else            w)))
+
+;;(synonymize (st/tag "The angry tide rose rapidly." {}))
+
+(defmulti flatten :type)
+
+(defmethod flatten :document
+  [d]
+  (str/join " " (map flatten (:sentences d))))
+
+(defmethod flatten :sentence
+  [s]
+  (str/join " " (map flatten (:words s))))
+
+(defmethod flatten :word
+  [w]
+  (:word w))
