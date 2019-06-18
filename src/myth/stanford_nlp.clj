@@ -95,7 +95,9 @@
       {:type :sentence
        :words (cond-> words
                 pos   (#(->> (map merge % (tags this :pos (memfn posTags)))
-                             (map (fn [x] (update x :pos friendly-tags)))))
+                             (map (fn [x] (update x :pos friendly-tags)))
+                             (map (fn [{:keys [text] :as x}]
+                                    (if (= ":" text) (assoc x :pos #{:semi-colon}) x)))))
                 lemma (#(map merge % (tags this :lemma (memfn lemmas))))
                 ner   (#(->> (map merge % (tags this :ner (memfn nerTags)))
                              (map (fn [x] (if (= "O" (:ner x)) (dissoc x :ner) x))))))})))
